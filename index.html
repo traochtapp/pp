@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="description" content="独立 Agent、共享公开对话、实时可见的多角色决策房间。" />
+    <title>共识现场｜多 Agent 实时讨论室</title>
+    <link rel="stylesheet" href="./globals.css" />
+  </head>
+  <body>
+    <main class="room-shell">
+      <header class="topbar">
+        <div class="brand-block">
+          <div class="brand-mark"><span></span><span></span><span></span></div>
+          <div><p class="eyebrow">DELIBERATION ROOM</p><h1>共识现场</h1></div>
+        </div>
+        <div class="connection-group">
+          <div class="connection-pill mock"><span class="live-dot"></span>公开演示模式 · 无需登录</div>
+          <div id="room-state" class="room-state">等待开始</div>
+        </div>
+      </header>
+
+      <section class="workspace">
+        <aside class="people-panel panel">
+          <div class="panel-heading">
+            <div><p class="section-kicker">ROOM MEMBERS</p><h2>在场专家</h2></div>
+            <span class="count-chip">3</span>
+          </div>
+          <div class="role-list">
+            <article class="role-card" data-role="business-owner">
+              <div class="avatar" style="background:#d56d46">林</div>
+              <div class="role-copy"><h3>业务负责人</h3><p class="person-name">林川</p><p class="role-lens">用人结果、业务节奏、试错成本</p></div>
+              <span class="state-dot"></span><div class="state-label">等待</div>
+            </article>
+            <article class="role-card" data-role="talent-lead">
+              <div class="avatar" style="background:#477f73">苏</div>
+              <div class="role-copy"><h3>招聘负责人</h3><p class="person-name">苏芮</p><p class="role-lens">人才供给、甄选证据、候选人体验</p></div>
+              <span class="state-dot"></span><div class="state-label">等待</div>
+            </article>
+            <article class="role-card" data-role="org-advisor">
+              <div class="avatar" style="background:#6c6998">周</div>
+              <div class="role-copy"><h3>组织诊断顾问</h3><p class="person-name">周恪</p><p class="role-lens">岗位边界、协作接口、长期组织风险</p></div>
+              <span class="state-dot"></span><div class="state-label">等待</div>
+            </article>
+          </div>
+          <div class="context-note">
+            <div class="context-icon">∥</div>
+            <div><strong>独立大脑，共享会场</strong><p>每位专家保留自己的判断锚点；公开发言进入同一份记录，下一位必须读完再回应。</p></div>
+          </div>
+        </aside>
+
+        <section class="conversation-panel panel">
+          <div class="conversation-head">
+            <div><p class="section-kicker">PUBLIC TRANSCRIPT</p><h2>共享讨论区</h2></div>
+            <div class="transcript-rule"><span></span>全员可见 · 按发言顺序同步</div>
+          </div>
+          <div class="topic-banner"><span>本轮议题</span><p id="topic-display">为一家正在从人工客服转向 AI 客服的成长型公司，招聘一名能在 90 天内跑出运营闭环的负责人</p></div>
+          <div id="message-stream" class="message-stream" aria-live="polite">
+            <div id="empty-room" class="empty-room">
+              <div class="empty-orbit"><span></span><span></span><span></span></div>
+              <h3>这里会实时出现他们的交锋</h3>
+              <p>不是等全部结束后再生成实录。每条公开发言产生时，都会立刻进入这个房间。</p>
+            </div>
+          </div>
+          <form id="composer" class="composer">
+            <div class="composer-input"><span>@ 全员</span><input id="message-input" placeholder="随时插话：补充事实、挑战假设，或要求某位专家回应…" /></div>
+            <button type="submit" aria-label="发送">↑</button>
+          </form>
+        </section>
+
+        <aside class="control-panel panel">
+          <div class="panel-heading"><div><p class="section-kicker">ROOM CONTROL</p><h2>开会设置</h2></div></div>
+          <label class="field-label" for="topic">讨论目标</label>
+          <textarea id="topic" class="topic-input">为一家正在从人工客服转向 AI 客服的成长型公司，招聘一名能在 90 天内跑出运营闭环的负责人</textarea>
+          <div class="setting-row">
+            <div><strong>角色生成</strong><p id="role-mode-copy">由主持人按议题动态匹配</p></div>
+            <button id="role-toggle" class="toggle" type="button"><span></span></button>
+          </div>
+          <div class="setting-row rounds-setting">
+            <div><strong>交锋轮数</strong><p>不含最后的共识校准</p></div>
+            <div class="stepper"><button id="round-minus" type="button">−</button><span id="round-count">2</span><button id="round-plus" type="button">＋</button></div>
+          </div>
+          <div class="protocol-card">
+            <p class="section-kicker">LIVE PROTOCOL</p>
+            <ol>
+              <li><span>01</span>角色先在独立会话中建立判断锚点</li>
+              <li><span>02</span>每条发言写入公共记录并立即显示</li>
+              <li><span>03</span>后续发言必须点名回应、允许修正</li>
+              <li><span>04</span>分歧显性化后再形成共识提案</li>
+            </ol>
+          </div>
+          <div class="actions">
+            <button id="start-button" class="primary" type="button">播放可视化演示 <span>→</span></button>
+            <p class="action-hint">公开预览版会实时播放一轮招聘专家讨论，不需要登录。</p>
+          </div>
+        </aside>
+      </section>
+    </main>
+
+    <script>
+      const colors = {"business-owner":"#d56d46","talent-lead":"#477f73","org-advisor":"#6c6998"};
+      const stateText = {idle:"等待",thinking:"正在思考",speaking:"正在发言",synced:"已读全场",done:"已完成"};
+      const topicInput = document.querySelector("#topic");
+      const topicDisplay = document.querySelector("#topic-display");
+      const stream = document.querySelector("#message-stream");
+      const stateBadge = document.querySelector("#room-state");
+      const startButton = document.querySelector("#start-button");
+      let timers = [];
+      let running = false;
+      let rounds = 2;
+
+      function setRoleState(id, state) {
+        const card = document.querySelector(`[data-role="${id}"]`);
+        if (!card) return;
+        card.className = `role-card ${state}`;
+        card.querySelector(".state-dot").className = `state-dot ${state}`;
+        card.querySelector(".state-label").textContent = stateText[state] || state;
+      }
+
+      function removeTyping() { document.querySelector("#typing-row")?.remove(); }
+
+      function showTyping(id, name) {
+        removeTyping();
+        const row = document.createElement("div");
+        row.id = "typing-row";
+        row.className = "typing-row";
+        row.innerHTML = `<div class="typing-avatar" style="background:${colors[id]}">${name.slice(0,1)}</div><div><strong>${name} 正在阅读全场并组织观点</strong><div class="typing-dots"><i></i><i></i><i></i></div></div>`;
+        stream.appendChild(row);
+        stream.scrollTop = stream.scrollHeight;
+      }
+
+      function addMessage({kind="agent",speaker,role="",speakerId="",text}) {
+        document.querySelector("#empty-room")?.remove();
+        removeTyping();
+        const article = document.createElement("article");
+        article.className = `message ${kind}`;
+        const avatar = kind === "user" ? "你" : kind === "consensus" ? "✓" : speaker.slice(0,1);
+        const bg = speakerId && colors[speakerId] ? `background:${colors[speakerId]}` : "";
+        const now = new Intl.DateTimeFormat("zh-CN",{hour:"2-digit",minute:"2-digit"}).format(new Date());
+        article.innerHTML = `<div class="message-avatar" style="${bg}">${avatar}</div><div class="message-body"><div class="message-meta"><strong>${speaker}</strong>${role ? `<span>${role}</span>` : ""}<time>${now}</time></div><div class="bubble"></div></div>`;
+        article.querySelector(".bubble").textContent = text;
+        stream.appendChild(article);
+        if (speakerId) setRoleState(speakerId,"speaking");
+        stream.scrollTop = stream.scrollHeight;
+      }
+
+      function later(delay, fn) { timers.push(setTimeout(fn, delay)); }
+
+      function resetRoom() {
+        timers.forEach(clearTimeout); timers = [];
+        stream.innerHTML = '<div id="empty-room" class="empty-room"><div class="empty-orbit"><span></span><span></span><span></span></div><h3>这里会实时出现他们的交锋</h3><p>不是等全部结束后再生成实录。每条公开发言产生时，都会立刻进入这个房间。</p></div>';
+        ["business-owner","talent-lead","org-advisor"].forEach(id => setRoleState(id,"idle"));
+      }
+
+      function startDemo() {
+        resetRoom(); running = true;
+        const topic = topicInput.value.trim() || topicDisplay.textContent;
+        topicDisplay.textContent = topic;
+        topicInput.disabled = true;
+        stateBadge.textContent = "公开讨论中";
+        stateBadge.classList.add("running");
+        startButton.textContent = "正在讨论…";
+
+        later(250,()=>addMessage({kind:"host",speaker:"主持人",text:`议题已锁定：${topic}。请先判断真正的能力缺口，再讨论候选人画像。`}));
+        later(900,()=>{setRoleState("business-owner","thinking");showTyping("business-owner","林川");});
+        later(1800,()=>addMessage({speaker:"林川",speakerId:"business-owner",role:"业务负责人",text:"我先反对从“做过 AI 客服”开始筛。我们现在缺的不是一个懂概念的人，而是能把客服问题拆成流程、指标和迭代节奏的人。首要证据应该是：他是否真的把一个混乱流程跑顺过。"}));
+        later(2500,()=>{setRoleState("business-owner","synced");setRoleState("talent-lead","thinking");showTyping("talent-lead","苏芮");});
+        later(3550,()=>addMessage({speaker:"苏芮",speakerId:"talent-lead",role:"招聘负责人",text:"我同意林川对结果证据的要求，但“把流程跑顺”还太宽。招聘时必须把它改写成可验证事件：候选人接手前后，人工转接率、知识命中率或客诉率发生了什么变化，他本人做了哪三个关键动作。"}));
+        later(4300,()=>{setRoleState("talent-lead","synced");setRoleState("org-advisor","thinking");showTyping("org-advisor","周恪");});
+        later(5450,()=>addMessage({speaker:"周恪",speakerId:"org-advisor",role:"组织诊断顾问",text:"你们都在找强执行者，但我担心招来后仍然失败。这个岗位横跨产品、客服和技术，如果老板不给数据权限和流程改造权，能力越强的人离开越快。所以画像里要加入“无正式权力下推动协作”的证据，组织侧也要先承诺边界。"}));
+        later(6300,()=>{setRoleState("org-advisor","synced");showTyping("business-owner","林川");});
+        later(7350,()=>addMessage({speaker:"林川",speakerId:"business-owner",role:"业务负责人",text:"周恪这个提醒成立，我修正前面的判断：我们不只验证候选人能不能做，还要验证他能否在低授权环境下拿到协同。与此同时，公司必须把数据权限和跨部门接口写进 90 天任务书，否则这不是招聘问题，是岗位设计问题。"}));
+        later(8150,()=>{setRoleState("business-owner","done");setRoleState("talent-lead","done");setRoleState("org-advisor","done");stateBadge.textContent="共识校准中";showTyping("talent-lead","苏芮");});
+        later(9250,()=>addMessage({kind:"consensus",speaker:"共识提案",text:"优先寻找“流程型 AI 客服负责人”，而非纯算法或纯客服主管。用三个证据决策：做成过可量化的服务流程改造；能把业务问题翻译成产品与知识库动作；在跨部门、低授权环境下仍推动过结果。同时，入职前确认数据权限、协作接口与 90 天验收线。"}));
+        later(9650,()=>{removeTyping();stateBadge.textContent="已形成共识";stateBadge.classList.remove("running");startButton.innerHTML='重新播放 <span>↻</span>';topicInput.disabled=false;running=false;});
+      }
+
+      startButton.addEventListener("click",()=>{ if (!running) startDemo(); });
+      topicInput.addEventListener("input",()=>{ if(!running) topicDisplay.textContent=topicInput.value; });
+      document.querySelector("#role-toggle").addEventListener("click",event=>{event.currentTarget.classList.toggle("on");document.querySelector("#role-mode-copy").textContent=event.currentTarget.classList.contains("on")?"使用左侧当前角色":"由主持人按议题动态匹配";});
+      document.querySelector("#round-minus").addEventListener("click",()=>{rounds=Math.max(1,rounds-1);document.querySelector("#round-count").textContent=rounds;});
+      document.querySelector("#round-plus").addEventListener("click",()=>{rounds=Math.min(3,rounds+1);document.querySelector("#round-count").textContent=rounds;});
+      document.querySelector("#composer").addEventListener("submit",event=>{event.preventDefault();const input=document.querySelector("#message-input");const text=input.value.trim();if(!text)return;addMessage({kind:"user",speaker:"你",text});input.value="";});
+    </script>
+  </body>
+</html>
