@@ -1,0 +1,4 @@
+interface:
+  display_name: "多 Agent 实时共享圆桌"
+  short_description: "动态选角、独立上下文，并在右侧本地聊天室逐条实时发布"
+  default_prompt: "Use $run-deliberation-council to create qualified independent experts and stream their shared-room discussion one turn at a time to the local right-side chat page."
